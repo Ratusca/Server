@@ -141,10 +141,10 @@ public class Server implements Runnable {
                         try {
 
                             insertUser = connection.prepareCall(procedure);
-                            insertUser.setString(1, lastName);
-                            insertUser.setString(2, foreName);
-                            insertUser.setString(3, userName);
-                            insertUser.setString(4, password);
+                            insertUser.setString(1, userName);
+                            insertUser.setString(2, password);
+                            insertUser.setString(3, lastName);
+                            insertUser.setString(4, foreName);
                             insertUser.setString(5, email);
                             insertUser.setInt(6, phoneNumber);
 
