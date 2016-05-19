@@ -8,11 +8,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import static java.lang.Math.PI;
-import static java.lang.Math.atan2;
-import static java.lang.Math.cos;
-import static java.lang.Math.sin;
-import static java.lang.Math.sqrt;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.sql.Connection;
@@ -128,12 +123,12 @@ public class Server implements Runnable {
 
                     case "register": {
 
-                        String lastName = read.readLine();
-                        String foreName = read.readLine();
                         String userName = read.readLine();
                         String password = read.readLine();
+                        String lastName = read.readLine();
+                        String foreName = read.readLine();
                         String email = read.readLine();
-                        int phoneNumber = Integer.parseInt(read.readLine());
+                        String phoneNumber = read.readLine();
 
                         CallableStatement insertUser;
                         String procedure = "{call rapi.insertUserData(?,?,?,?,?,?,?,?)}";
@@ -146,7 +141,7 @@ public class Server implements Runnable {
                             insertUser.setString(3, lastName);
                             insertUser.setString(4, foreName);
                             insertUser.setString(5, email);
-                            insertUser.setInt(6, phoneNumber);
+                            insertUser.setString(6, phoneNumber);
 
                             insertUser.registerOutParameter(7, java.sql.Types.VARCHAR);
                             insertUser.registerOutParameter(8, java.sql.Types.NUMERIC);
@@ -211,8 +206,8 @@ public class Server implements Runnable {
                         try {
 
                             int street_no = Integer.parseInt(street_number);
-                            int lat = Integer.parseInt(latitude);
-                            int lon = Integer.parseInt(longitude);
+                            Double lat = Double.parseDouble(latitude);
+                            Double lon = Double.parseDouble(longitude);
 
                             insertBuildingData = connection.prepareCall(procedure);
                             insertBuildingData.setString(1, city);
@@ -222,8 +217,8 @@ public class Server implements Runnable {
                             insertBuildingData.setString(5, suite);
                             insertBuildingData.setString(6, username);
                             insertBuildingData.setString(7, picture);
-                            insertBuildingData.setInt(8, lat);
-                            insertBuildingData.setInt(9, lon);
+                            insertBuildingData.setDouble(8, lat);
+                            insertBuildingData.setDouble(9, lon);
 
                             insertBuildingData.registerOutParameter(10, java.sql.Types.VARCHAR);
                             insertBuildingData.registerOutParameter(11, java.sql.Types.NUMERIC);
@@ -235,7 +230,7 @@ public class Server implements Runnable {
                             write.println(status);
 
                         } catch (SQLException e) {
-                            System.out.println("Error!");
+                            System.out.println(e);
                         }
                     }
                     break;
