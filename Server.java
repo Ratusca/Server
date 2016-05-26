@@ -10,10 +10,14 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.*;
 import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import net.sf.json.JSONObject;
 import net.sf.json.JSONSerializer;
 
@@ -98,12 +102,21 @@ public class Server implements Runnable {
                         String username = read.readLine();
                         String password = read.readLine();
 
+                        MessageDigest md = MessageDigest.getInstance("MD5");
+                        md.update(password.getBytes());
+                        byte byteData[] = md.digest();
+                        StringBuilder sb = new StringBuilder();
+                        for (int i = 0; i < byteData.length; i++) {
+                            sb.append(Integer.toString((byteData[i] & 0xff) + 0x100, 16).substring(1));
+                        }
+                        String pass = sb.toString();
+
                         try {
 
                             CallableStatement checkData = connection.prepareCall("{call rapi.loginDataValidation(?,?,?,?)}");
 
                             checkData.setString(1, username);
-                            checkData.setString(2, password);
+                            checkData.setString(2, pass);
 
                             checkData.registerOutParameter(3, java.sql.Types.VARCHAR);
                             checkData.registerOutParameter(4, java.sql.Types.NUMERIC);
@@ -130,6 +143,15 @@ public class Server implements Runnable {
                         String email = read.readLine();
                         String phoneNumber = read.readLine();
 
+                        MessageDigest md = MessageDigest.getInstance("MD5");
+                        md.update(password.getBytes());
+                        byte byteData[] = md.digest();
+                        StringBuilder sb = new StringBuilder();
+                        for (int i = 0; i < byteData.length; i++) {
+                            sb.append(Integer.toString((byteData[i] & 0xff) + 0x100, 16).substring(1));
+                        }
+                        String pass = sb.toString();
+
                         CallableStatement insertUser;
                         String procedure = "{call rapi.insertUserData(?,?,?,?,?,?,?,?)}";
 
@@ -137,7 +159,7 @@ public class Server implements Runnable {
 
                             insertUser = connection.prepareCall(procedure);
                             insertUser.setString(1, userName);
-                            insertUser.setString(2, password);
+                            insertUser.setString(2, pass);
                             insertUser.setString(3, lastName);
                             insertUser.setString(4, foreName);
                             insertUser.setString(5, email);
@@ -234,12 +256,58 @@ public class Server implements Runnable {
                         }
                     }
                     break;
+
+                    case "updateData": {
+
+                        String dataJSON = read.readLine();
+                        JSONObject updateData = (JSONObject) JSONSerializer.toJSON(dataJSON);
+
+                        String username = (String) updateData.get("username");
+                        String city = (String) updateData.get("city");
+                        String street_name = (String) updateData.get("street_name");
+                        String street_number = (String) updateData.get("street_number");
+                        String block = (String) updateData.get("block");
+                        String suite = (String) updateData.get("suite");
+                        String picture = (String) updateData.get("picture");
+
+                        CallableStatement updateBuildingData;
+                        String procedure = "{call rapi.updateBuildingData(?,?,?,?,?,?,?,?,?)}";
+
+                        try {
+
+                            int street_no = Integer.parseInt(street_number);
+
+                            updateBuildingData = connection.prepareCall(procedure);
+                            updateBuildingData.setString(1, username);
+                            updateBuildingData.setString(2, city);
+                            updateBuildingData.setString(3, street_name);
+                            updateBuildingData.setInt(4, street_no);
+                            updateBuildingData.setString(5, block);
+                            updateBuildingData.setString(6, suite);
+                            updateBuildingData.setString(7, picture);
+
+                            updateBuildingData.registerOutParameter(8, java.sql.Types.VARCHAR);
+                            updateBuildingData.registerOutParameter(9, java.sql.Types.NUMERIC);
+
+                            updateBuildingData.execute();
+
+                            String status = updateBuildingData.getString(8);
+
+                            write.println(status);
+
+                        } catch (SQLException e) {
+                            System.out.println(e);
+                        }
+                    }
+                    break;
                 }
                 option = read.readLine();
             }
             clientSocket.close();
         } catch (IOException e) {
             System.out.println(e);
+        } catch (NoSuchAlgorithmException ex) {
+            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 }
